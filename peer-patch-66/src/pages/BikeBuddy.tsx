@@ -3,10 +3,22 @@ import { Bike, Search, Plus, MapPin, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Navbar } from "@/components/Navbar";
 import { toast } from "sonner";
 
@@ -27,19 +39,23 @@ const BikeBuddy = () => {
     year: "",
     image: null,
   });
+  const [locations, setLocations] = useState([]);
   const navigate = useNavigate();
 
   // Fetch bikers from backend and their names
   useEffect(() => {
     const fetchBikers = async () => {
       try {
-        const response = await fetch("https://campusconnect-1.onrender.com/getallbikers", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
-          },
-        });
+        const response = await fetch(
+          "https://campusconnect-1.onrender.com/getallbikers",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+            },
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch bikers");
@@ -56,7 +72,9 @@ const BikeBuddy = () => {
                   method: "GET",
                   headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
+                    Authorization: `Bearer ${
+                      localStorage.getItem("token") || ""
+                    }`,
                   },
                 }
               );
@@ -72,6 +90,12 @@ const BikeBuddy = () => {
           })
         );
         setBikers(bikersWithNames);
+
+        // Extract unique locations
+        const uniqueLocations = [
+          ...new Set(bikersWithNames.map((biker) => biker.location)),
+        ];
+        setLocations(uniqueLocations);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -89,13 +113,16 @@ const BikeBuddy = () => {
       // Reset to all bikers if search is cleared
       const fetchBikers = async () => {
         try {
-          const response = await fetch("https://campusconnect-1.onrender.com/getallbikers", {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
-            },
-          });
+          const response = await fetch(
+            "https://campusconnect-1.onrender.com/getallbikers",
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+              },
+            }
+          );
 
           if (!response.ok) {
             throw new Error("Failed to fetch bikers");
@@ -111,7 +138,9 @@ const BikeBuddy = () => {
                     method: "GET",
                     headers: {
                       "Content-Type": "application/json",
-                      "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
+                      Authorization: `Bearer ${
+                        localStorage.getItem("token") || ""
+                      }`,
                     },
                   }
                 );
@@ -136,14 +165,17 @@ const BikeBuddy = () => {
     }
 
     try {
-      const response = await fetch("https://campusconnect-1.onrender.com/bike_partner", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
-        },
-        body: JSON.stringify({ location: searchLocation }),
-      });
+      const response = await fetch(
+        "https://campusconnect-1.onrender.com/bike_partner",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          },
+          body: JSON.stringify({ location: searchLocation }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to search bikers");
@@ -159,7 +191,9 @@ const BikeBuddy = () => {
                 method: "GET",
                 headers: {
                   "Content-Type": "application/json",
-                  "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
+                  Authorization: `Bearer ${
+                    localStorage.getItem("token") || ""
+                  }`,
                 },
               }
             );
@@ -208,13 +242,16 @@ const BikeBuddy = () => {
     }
 
     try {
-      const response = await fetch("https://campusconnect-1.onrender.com/biker", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
-        },
-        body: formData,
-      });
+      const response = await fetch(
+        "https://campusconnect-1.onrender.com/biker",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          },
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to create biker");
@@ -228,12 +265,17 @@ const BikeBuddy = () => {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
           },
         }
       );
-      const userData = userResponse.ok ? await userResponse.json() : { name: "Unknown Biker" };
-      setBikers((prev) => [...prev, { ...newBiker, name: userData.name || "Unknown Biker" }]);
+      const userData = userResponse.ok
+        ? await userResponse.json()
+        : { name: "Unknown Biker" };
+      setBikers((prev) => [
+        ...prev,
+        { ...newBiker, name: userData.name || "Unknown Biker" },
+      ]);
       setIsCreateModalOpen(false);
       toast.success("Biker listing created successfully!");
       // Reset form
@@ -255,9 +297,9 @@ const BikeBuddy = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar onLoginClick={() => setIsAuthModalOpen(true)} />
-      
+
       <main className="container mx-auto px-4 pt-24 pb-16 max-w-6xl">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -268,27 +310,40 @@ const BikeBuddy = () => {
           </div>
           <h1 className="text-4xl font-bold mb-4">Bike Buddy</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Connect with students who own bikes or need rides around campus. Share rides, save time, and reduce carbon footprint.
+            Connect with students who own bikes or need rides around campus.
+            Share rides, save time, and reduce carbon footprint.
           </p>
         </motion.div>
-        
+
         <div className="mb-10 relative">
-          <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4 items-center bg-card p-6 rounded-xl shadow-sm">
+          <form
+            onSubmit={handleSearch}
+            className="flex flex-col md:flex-row gap-4 items-center bg-card p-6 rounded-xl shadow-sm"
+          >
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input 
-                placeholder="Search by location" 
+              <Input
+                placeholder="Search by location"
                 className="pl-10 w-full"
                 value={searchLocation}
                 onChange={(e) => setSearchLocation(e.target.value)}
+                list="locations"
               />
+              <datalist id="locations">
+                {locations.map((location, index) => (
+                  <option key={index} value={location} />
+                ))}
+              </datalist>
             </div>
-            <Button type="submit" className="whitespace-nowrap w-full md:w-auto">
+            <Button
+              type="submit"
+              className="whitespace-nowrap w-full md:w-auto"
+            >
               Search
             </Button>
-            <Button 
-              type="button" 
-              className="whitespace-nowrap gap-2 w-full md:w-auto" 
+            <Button
+              type="button"
+              className="whitespace-nowrap gap-2 w-full md:w-auto"
               onClick={() => setIsCreateModalOpen(true)}
             >
               <Plus className="h-4 w-4" />
@@ -296,10 +351,12 @@ const BikeBuddy = () => {
             </Button>
           </form>
         </div>
-        
-        {loading && <p className="text-center text-muted-foreground">Loading...</p>}
+
+        {loading && (
+          <p className="text-center text-muted-foreground">Loading...</p>
+        )}
         {error && <p className="text-center text-red-500">{error}</p>}
-        
+
         {!loading && !error && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
             {bikers.map((biker, index) => (
@@ -315,16 +372,34 @@ const BikeBuddy = () => {
                   </CardHeader>
                   <CardContent className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1 space-y-2 text-sm">
-                      <p><span className="font-semibold">Vehicle No:</span> {biker.bikeno}</p>
-                      <p><span className="font-semibold">Contact:</span> {biker.phoneno}</p>
-                      <p><span className="font-semibold">License:</span> {biker.licensecheck ? "Yes" : "No"}</p>
-                      <p><span className="font-semibold">Helmet:</span> {biker.helmetcheck ? "Yes" : "No"}</p>
+                      <p>
+                        <span className="font-semibold">Vehicle No:</span>{" "}
+                        {biker.bikeno}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Contact:</span>{" "}
+                        {biker.phoneno}
+                      </p>
+                      <p>
+                        <span className="font-semibold">License:</span>{" "}
+                        {biker.licensecheck ? "Yes" : "No"}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Helmet:</span>{" "}
+                        {biker.helmetcheck ? "Yes" : "No"}
+                      </p>
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
                         <span>{biker.location}</span>
                       </div>
-                      <p><span className="font-semibold">Department:</span> {biker.department}</p>
-                      <p><span className="font-semibold">Year:</span> {biker.year}</p>
+                      <p>
+                        <span className="font-semibold">Department:</span>{" "}
+                        {biker.department}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Year:</span>{" "}
+                        {biker.year}
+                      </p>
                     </div>
                     {biker.image && (
                       <div className="flex-shrink-0">
@@ -333,7 +408,8 @@ const BikeBuddy = () => {
                           alt={`${biker.bikeno} image`}
                           className="w-32 h-32 object-cover rounded-full"
                           onError={(e) => {
-                            e.currentTarget.src = "https://via.placeholder.com/150";
+                            e.currentTarget.src =
+                              "https://via.placeholder.com/150";
                           }}
                         />
                       </div>
@@ -454,7 +530,10 @@ const BikeBuddy = () => {
             </Button>
           </form>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateModalOpen(false)}
+            >
               Cancel
             </Button>
           </DialogFooter>

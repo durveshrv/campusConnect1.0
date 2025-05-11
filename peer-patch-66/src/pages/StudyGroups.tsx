@@ -1,12 +1,32 @@
 import { useState, useEffect } from "react";
-import { BookOpen, Search, Plus, Clock, Calendar, BookMarked } from "lucide-react";
+import {
+  BookOpen,
+  Search,
+  Plus,
+  Clock,
+  Calendar,
+  BookMarked,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Navbar } from "@/components/Navbar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -16,6 +36,7 @@ const StudyGroups = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [subjects, setSubjects] = useState([]);
   const [searchSubject, setSearchSubject] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
@@ -34,13 +55,16 @@ const StudyGroups = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await fetch("https://campusconnect-1.onrender.com/event_join", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
-          },
-        });
+        const response = await fetch(
+          "https://campusconnect-1.onrender.com/event_join",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+            },
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch events");
@@ -48,6 +72,13 @@ const StudyGroups = () => {
 
         const data = await response.json();
         setEvents(data);
+
+        // Extract unique subjects
+        const uniqueSubjects = [
+          "All",
+          ...new Set(data.map((group) => group.subject)),
+        ];
+        setSubjects(uniqueSubjects);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -58,47 +89,26 @@ const StudyGroups = () => {
     fetchEvents();
   }, []);
 
-  // Search events by subject
+  // Correct the API endpoint and payload for subject filtering
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (!searchSubject) {
-      // Reset to all events if search is cleared
-      const fetchEvents = async () => {
-        try {
-          const response = await fetch("https://campusconnect-1.onrender.com/event_join", {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
-            },
-          });
-
-          if (!response.ok) {
-            throw new Error("Failed to fetch events");
-          }
-
-          const data = await response.json();
-          setEvents(data);
-        } catch (err) {
-          setError(err.message);
-        }
-      };
-      fetchEvents();
-      return;
-    }
+    const subjectFilter = searchSubject === "All" ? "" : searchSubject;
 
     try {
-      const response = await fetch("https://campusconnect-1.onrender.com/getevents", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
-        },
-        body: JSON.stringify({ subject: searchSubject }),
-      });
+      const response = await fetch(
+        "https://campusconnect-1.onrender.com/filterstudygroups", // Corrected endpoint
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          },
+          body: JSON.stringify({ subject: subjectFilter }), // Ensure payload matches backend expectations
+        }
+      );
 
       if (!response.ok) {
-        throw new Error("Failed to search events");
+        throw new Error("Failed to filter study groups");
       }
 
       const data = await response.json();
@@ -121,13 +131,16 @@ const StudyGroups = () => {
     // Fetch logged-in user's name from /about
     let userName = "Unknown User";
     try {
-      const userResponse = await fetch("https://campusconnect-1.onrender.com/about", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
-        },
-      });
+      const userResponse = await fetch(
+        "https://campusconnect-1.onrender.com/about",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          },
+        }
+      );
       if (userResponse.ok) {
         const userData = await userResponse.json();
         userName = userData.name || "Unknown User";
@@ -144,14 +157,17 @@ const StudyGroups = () => {
     };
 
     try {
-      const response = await fetch("https://campusconnect-1.onrender.com/event", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
-        },
-        body: JSON.stringify(eventData),
-      });
+      const response = await fetch(
+        "https://campusconnect-1.onrender.com/event",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          },
+          body: JSON.stringify(eventData),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to create event");
@@ -193,9 +209,9 @@ const StudyGroups = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar onLoginClick={() => setIsAuthModalOpen(true)} />
-      
+
       <main className="container mx-auto px-4 pt-24 pb-16 max-w-6xl">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -206,27 +222,40 @@ const StudyGroups = () => {
           </div>
           <h1 className="text-4xl font-bold mb-4">Study Groups</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Find or create study groups for your courses. Collaborate with classmates and improve your academic performance.
+            Find or create study groups for your courses. Collaborate with
+            classmates and improve your academic performance.
           </p>
         </motion.div>
-        
+
         <div className="mb-10 relative">
-          <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4 items-center bg-card p-6 rounded-xl shadow-sm">
+          <form
+            onSubmit={handleSearch}
+            className="flex flex-col md:flex-row gap-4 items-center bg-card p-6 rounded-xl shadow-sm"
+          >
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input 
-                placeholder="Search by subject" 
+              <Input
+                placeholder="Search by subject"
                 className="pl-10 w-full"
                 value={searchSubject}
                 onChange={(e) => setSearchSubject(e.target.value)}
+                list="subjects"
               />
+              <datalist id="subjects">
+                {subjects.map((subject, index) => (
+                  <option key={index} value={subject} />
+                ))}
+              </datalist>
             </div>
-            <Button type="submit" className="whitespace-nowrap w-full md:w-auto">
+            <Button
+              type="submit"
+              className="whitespace-nowrap w-full md:w-auto"
+            >
               Search
             </Button>
-            <Button 
-              type="button" 
-              className="whitespace-nowrap gap-2 w-full md:w-auto" 
+            <Button
+              type="button"
+              className="whitespace-nowrap gap-2 w-full md:w-auto"
               onClick={() => setIsCreateModalOpen(true)}
             >
               <Plus className="h-4 w-4" />
@@ -234,10 +263,12 @@ const StudyGroups = () => {
             </Button>
           </form>
         </div>
-        
-        {loading && <p className="text-center text-muted-foreground">Loading...</p>}
+
+        {loading && (
+          <p className="text-center text-muted-foreground">Loading...</p>
+        )}
         {error && <p className="text-center text-red-500">{error}</p>}
-        
+
         {!loading && !error && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
             {events.map((event, index) => {
@@ -256,11 +287,15 @@ const StudyGroups = () => {
                           <CardTitle>{event.subject} Study Group</CardTitle>
                           <CardDescription>{event.name}</CardDescription>
                         </div>
-                        <Badge variant="outline" className="bg-primary/10">{event.subject}</Badge>
+                        <Badge variant="outline" className="bg-primary/10">
+                          {event.subject}
+                        </Badge>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <p className="mb-4 text-muted-foreground">Join us for a study session on {event.subject}!</p>
+                      <p className="mb-4 text-muted-foreground">
+                        Join us for a study session on {event.subject}!
+                      </p>
                       <div className="flex flex-col space-y-2 text-sm">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -383,7 +418,10 @@ const StudyGroups = () => {
             </Button>
           </form>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateModalOpen(false)}
+            >
               Cancel
             </Button>
           </DialogFooter>
